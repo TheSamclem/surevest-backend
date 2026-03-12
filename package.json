@@ -1,0 +1,43 @@
+{
+  "name": "findale-backend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node src/app.js ",
+    "migrate": "npx prisma migrate dev --name init && npx prisma generate",
+    "seed": "node seed-role.js && node seed-branch.js && node seed-permissions.js && node seed-holidays.js && node seed-user.js",
+    "seed:role": "node seed-role.js",
+    "seed:branch": "node seed-branch.js",
+    "seed:permissions": "node seed-permissions.js",
+    "seed:holidays": "node seed-holidays.js",
+    "seed:user": "node seed-user.js",
+    "dev": "nodemon"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "@prisma/adapter-pg": "^7.3.0",
+    "@prisma/client": "^7.3.0",
+    "@react-native-async-storage/async-storage": "^2.2.0",
+    "axios": "^1.13.4",
+    "bcryptjs": "^3.0.3",
+    "cloudinary": "^2.9.0",
+    "cors": "^2.8.6",
+    "csv-parser": "^3.2.0",
+    "dotenv": "^17.2.3",
+    "express": "^5.2.1",
+    "install": "^0.13.0",
+    "jsonwebtoken": "^9.0.3",
+    "morgan": "^1.10.1",
+    "paystack-sdk": "^3.6.1",
+    "pg": "^8.18.0",
+    "prisma": "^7.3.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.11"
+  }
+}

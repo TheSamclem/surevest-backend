@@ -1,0 +1,2 @@
+ALTER TABLE "LoanType"
+ADD COLUMN "interestCollectionMethod" TEXT NOT NULL DEFAULT 'DEDUCTED';

@@ -1,0 +1,273 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id                       Int              @id @default(autoincrement())
+  surname                  String
+  othername                String
+  gender                   String
+  password                 String
+  email                    String           @unique
+  phoneNumber              String           @unique
+  role_id                  Int
+  branchId                 Int
+  createdAt                DateTime         @default(now())
+  updatedAt                DateTime         @updatedAt
+  status                   String           @default("inactive")
+  activityLogs             ActivityLog[]
+  customer                 Customer[]
+  loansHandled             Loan[]           @relation("LoanFieldOfficer")
+  offlinePaymentsSubmitted OfflinePayment[] @relation("AgentPayments")
+  offlinePaymentsApproved  OfflinePayment[] @relation("AdminApprovals")
+  transactions             Transaction[]    @relation("UserTransactions")
+  branch                   Branch           @relation(fields: [branchId], references: [id])
+  role                     Role             @relation(fields: [role_id], references: [id])
+  permissions              Permission[]     @relation("UserPermissions")
+}
+
+model ActivityLog {
+  id         Int      @id @default(autoincrement())
+  userId     Int
+  action     String
+  details    String?
+  entityType String?
+  entityId   Int?
+  ipAddress  String?
+  createdAt  DateTime @default(now())
+  user       User     @relation(fields: [userId], references: [id])
+}
+
+model Role {
+  id          Int          @id @default(autoincrement())
+  name        String       @unique
+  rank        Int          @default(1)
+  staffs      Staff[]
+  users       User[]
+  permissions Permission[] @relation("RolePermissions")
+}
+
+model Permission {
+  id          Int      @id @default(autoincrement())
+  slug        String   @unique
+  name        String
+  description String?
+  category    String?  @default("General")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  roles       Role[]   @relation("RolePermissions")
+  users       User[]   @relation("UserPermissions")
+}
+
+model Branch {
+  id       Int        @id @default(autoincrement())
+  name     String     @unique
+  customer Customer[]
+  loan     Loan[]
+  staffs   Staff[]
+  users    User[]
+}
+
+model Customer {
+  id                       Int              @id @default(autoincrement())
+  title                    String?
+  surname                  String
+  firstname                String
+  gender                   String
+  dob                      DateTime
+  marital_status           String?
+  home_address             String
+  phoneNumber              String
+  email                    String?
+  nationality              String
+  stateOfOrigin            String
+  businessName             String?
+  businessAddress          String?
+  means_of_id              MeansOfId
+  id_number                String
+  referrer                 String?
+  fieldOfficerId           Int?
+  branchId                 Int
+  bankName                 String
+  accountNumber            String
+  bvn                      String?
+  nextOfKinName            String
+  nextOfKinGender          String
+  nextOfKinRelationship    String
+  nextOfKinPhoneNumber     String
+  nextOfKinAddress         String
+  profilePicture           String?
+  customers_assets         String?
+  value_of_goods           Float?
+  guarantorName            String
+  guarantorPhoneNumber     String
+  guarantorAddress         String
+  guarantorBusinessAddress String
+  relationshipWithBorrower String
+  guarantorOccupation      String
+  createdAt                DateTime         @default(now())
+  updatedAt                DateTime         @updatedAt
+  paystackCustomerId       String?
+  virtualAccountBank       String?
+  virtualAccountNumber     String?
+  virtualAccountProvider   String?          @default("paystack")
+  customer_code            String?
+  mandateStatus            String           @default("NOT_ENROLLED")
+  status                   String           @default("active")
+  branch                   Branch           @relation(fields: [branchId], references: [id])
+  fieldOfficer             User?            @relation(fields: [fieldOfficerId], references: [id])
+  loans                    Loan[]
+  offlinePayments          OfflinePayment[]
+}
+
+model Staff {
+  id          Int      @id @default(autoincrement())
+  firstname   String
+  lastname    String
+  email       String   @unique
+  phoneNumber String   @unique
+  roleId      Int
+  branchId    Int
+  password    String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  branch      Branch   @relation(fields: [branchId], references: [id])
+  role        Role     @relation(fields: [roleId], references: [id])
+}
+
+model Loan {
+  id              Int                  @id @default(autoincrement())
+  principal       Float
+  interestCollectionMethod String      @default("DEDUCTED")
+  amountPaid      Float                @default(0)
+  tenure          Int
+  startDate       DateTime?
+  endDate         DateTime?
+  status          String               @default("pending")
+  approvedStatus  Boolean              @default(false)
+  approvedBy      Int?
+  customerId      Int
+  fieldOfficerId  Int
+  branchId        Int
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+  loanTypeId      Int
+  appliedCharges  Json?
+  interestRate    Float                @default(0)
+  totalToRepay    Float
+  amountDisbursed Float                @default(0)
+  totalCharges    Float                @default(0)
+  isDisbursed     Boolean              @default(false)
+  installment     InstallmentPayment[]
+  branch          Branch               @relation(fields: [branchId], references: [id])
+  customer        Customer             @relation(fields: [customerId], references: [id])
+  fieldOfficer    User                 @relation("LoanFieldOfficer", fields: [fieldOfficerId], references: [id])
+  loanType        LoanType             @relation(fields: [loanTypeId], references: [id])
+  offlinePayments OfflinePayment[]
+}
+
+model InstallmentPayment {
+  id             Int             @id @default(autoincrement())
+  loanId         Int
+  principal      Float
+  amountExpected Float
+  amountPaid     Float
+  status         String          @default("not paid")
+  isWaiting      Boolean?        @default(false)
+  fieldOfficerId Int
+  customerId     Int
+  expectedDate   DateTime
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  loan           Loan            @relation(fields: [loanId], references: [id])
+  waitingAmount  WaitingAmount[]
+}
+
+model WaitingAmount {
+  id             Int                @id @default(autoincrement())
+  loanId         Int
+  installmentId  Int
+  amount         Float
+  fieldOfficerId Int
+  branchId       Int
+  status         String             @default("waiting")
+  createdAt      DateTime           @default(now())
+  installment    InstallmentPayment @relation(fields: [installmentId], references: [id])
+}
+
+model Transaction {
+  id             Int      @id @default(autoincrement())
+  loanId         Int
+  installmentId  Int
+  amount         Float
+  fieldOfficerId Int
+  branchId       Int
+  source         String   @default("manual_collection")
+  reference      String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  user           User     @relation("UserTransactions", fields: [fieldOfficerId], references: [id])
+}
+
+model Holiday {
+  id        Int      @id @default(autoincrement())
+  name      String
+  date      DateTime @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Charge {
+  id               Int      @id @default(autoincrement())
+  name             String
+  amount           Float
+  type             String   @default("FIXED")
+  isRequired       Boolean  @default(true)
+  description      String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  collectionMethod String   @default("DEDUCTED")
+}
+
+model LoanType {
+  id                       Int      @id @default(autoincrement())
+  name                     String   @unique
+  tenure                   Int
+  interestRate             Float
+  interestCollectionMethod String   @default("DEDUCTED")
+  interval                 Int
+  description              String?
+  createdAt                DateTime @default(now())
+  updatedAt                DateTime @updatedAt
+  loans                    Loan[]
+}
+
+model OfflinePayment {
+  id           Int      @id @default(autoincrement())
+  loanId       Int
+  customerId   Int
+  agentId      Int
+  amount       Float
+  status       String   @default("pending")
+  paymentDate  DateTime @default(now())
+  approvedBy   Int?
+  receiptImage String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  agent        User     @relation("AgentPayments", fields: [agentId], references: [id])
+  admin        User?    @relation("AdminApprovals", fields: [approvedBy], references: [id])
+  customer     Customer @relation(fields: [customerId], references: [id])
+  loan         Loan     @relation(fields: [loanId], references: [id])
+}
+
+enum MeansOfId {
+  NATIONAL_ID
+  INTL_PASSPORT
+  DRIVERS_LICENSE
+  VOTERS_CARD
+  OTHERS
+}
